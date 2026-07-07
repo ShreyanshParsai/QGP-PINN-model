@@ -155,21 +155,7 @@ class QPMPinn(nn.Module):
         T = x[:, 0:1]
         mu_B = x[:, 1:2]
 
-        # ── Optimization #4: Input Normalization ──
-        # T_c = 0.155 GeV. Scale T AND mu_B by the same T_c so the network
-        # sees both inputs on comparable numerical footing.
-        #
-        # ROOT-CAUSE NOTE: previously only T was normalized (T/0.155 ~ O(1))
-        # while mu_B was passed in RAW GeV (0 to ~0.8). At high MuB/T bands
-        # this means the two encoder inputs sit on very different scales,
-        # forcing the network to implicitly learn mu_B's relative importance
-        # from scratch rather than being told it directly. This is consistent
-        # with the observed failure pattern: n_B error stays ~30% at EVERY
-        # nonzero MuB/T band rather than growing/shrinking with T -- a sign
-        # the model never quite learned mu_B's correct scale relative to T,
-        # not that it's fitting noise. Normalizing both the same way removes
-        # this asymmetry without changing the physics formulas below (which
-        # still receive raw, unscaled T and mu_B, unchanged).
+       .
         T_norm    = T    / 0.155
         mu_B_norm = mu_B / 0.155
         x_scaled = torch.cat([T_norm, mu_B_norm], dim=1)
