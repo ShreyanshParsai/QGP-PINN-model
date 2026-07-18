@@ -36,7 +36,6 @@ PI2: float = math.pi ** 2
 # Building block: Residual Block
 # ---------------------------------------------------------------------------
 class ResidualBlock(nn.Module):
-    
 
     def __init__(self, width: int, dropout: float = 0.0) -> None:
         super().__init__()
@@ -62,7 +61,6 @@ class ResidualBlock(nn.Module):
 # Main PINN module
 # ---------------------------------------------------------------------------
 class QPMPinn(nn.Module):
-
 
     # Physical constants stored as buffers so they move with the model
     # to whatever device is used (CPU / CUDA / MPS).
@@ -111,7 +109,7 @@ class QPMPinn(nn.Module):
         T: torch.Tensor,        # shape (B, 1)
         mu_B: torch.Tensor,     # shape (B, 1)
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        
+
         # Chemical potentials from baryon charge fractions
         mu_u = mu_B / 3.0       # u quark
         mu_d = mu_B / 3.0       # d quark
@@ -147,15 +145,17 @@ class QPMPinn(nn.Module):
 
     # — Forward pass ——————————————————————————————————————————————————————
     def forward(
-        self, 
+        self,
         x: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        
+
         # Keep the raw physical values for the physics equations later
         T = x[:, 0:1]
         mu_B = x[:, 1:2]
 
-       .
+        # ── Input Normalization ──
+        # T_c = 0.155 GeV. Scale T AND mu_B by the same T_c so the network
+        # sees both inputs on comparable numerical footing.
         T_norm    = T    / 0.155
         mu_B_norm = mu_B / 0.155
         x_scaled = torch.cat([T_norm, mu_B_norm], dim=1)
@@ -172,8 +172,9 @@ class QPMPinn(nn.Module):
         m_g, m_ud, m_s = self._apply_qpm(g2, T, mu_B)
 
         return g2, m_g, m_ud, m_s
-    
-    # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
 # Convenience factory
 # ---------------------------------------------------------------------------
 def build_qpm_pinn(
